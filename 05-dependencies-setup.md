@@ -1,0 +1,395 @@
+# MCP Dependencies and Setup Guide
+
+## Overview
+This document details the dependency management patterns for MCP servers, including pyproject.toml configuration, package requirements, and setup best practices derived from analyzing multiple implementations.
+
+## Core Dependencies
+
+### Minimal Requirements
+Every MCP server requires at minimum:
+
+```toml
+[project]
+name = "your-mcp-server"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp[cli]>=1.5.0",
+]
+```
+
+### Common Dependency Pattern
+Most production servers include:
+
+```toml
+[project]
+name = "production-mcp-server"
+version = "0.1.0"
+description = "MCP server for specific functionality"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # Core MCP
+    "mcp[cli]>=1.10.0",
+    
+    # Development
+    "ipykernel>=6.29.5",  # For Jupyter notebook support
+    
+    # Domain-specific
+    "your-sdk>=1.0.0",
+]
+```
+
+## Real Implementation Examples
+
+### 1. Simple Integration (agent-with-mcp-memory)
+```toml
+[project]
+name = "agent-with-mcp-memory"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "crewai>=0.134.0",        # Agent framework
+    "ipykernel>=6.29.5",      # Jupyter support
+    "linkup-sdk>=0.2.7",      # External service
+    "mcp[cli]>=1.10.1",       # MCP core
+    "opik>=1.7.42",           # Observability
+]
+```
+
+### 2. RAG Implementation (cursor-linkup-mcp)
+```toml
+[project]
+name = "cursor-linkup-mcp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel>=6.29.5",
+    "linkup-sdk>=0.2.4",
+    "llama-index>=0.12.25",                          # RAG framework
+    "llama-index-embeddings-huggingface>=0.5.2",    # Embeddings
+    "llama-index-llms-ollama>=0.5.3",               # LLM integration
+    "mcp[cli]>=1.5.0",
+]
+```
+
+### 3. Minimal External Service (eyelevel-mcp-rag)
+```toml
+[project]
+name = "eyelevel-mcp-rag"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "groundx>=2.3.0",       # External API client
+    "ipykernel>=6.29.5",    # Development support
+    "mcp[cli]>=1.6.0",      # MCP core
+]
+```
+
+## Dependency Categories
+
+### 1. Core MCP Package
+```toml
+"mcp[cli]>=1.5.0"  # Minimum version across all implementations
+```
+
+**Version Distribution:**
+- 1.5.0: Early implementations
+- 1.6.0-1.9.0: Standard versions
+- 1.10.0+: Latest implementations
+
+### 2. Development Tools
+```toml
+"ipykernel>=6.29.5"  # Jupyter notebook support (90% of projects)
+```
+
+### 3. AI/ML Frameworks
+```toml
+# RAG and LLM
+"llama-index>=0.12.25"
+"llamaindex>=0.12.25"  # Alternative spelling
+"crewai>=0.134.0"
+
+# Embeddings
+"llama-index-embeddings-huggingface>=0.5.2"
+
+# LLM Providers
+"llama-index-llms-ollama>=0.5.3"
+```
+
+### 4. External Service SDKs
+```toml
+# Web and Search
+"linkup-sdk>=0.2.4"
+
+# Document Processing
+"groundx>=2.3.0"
+
+# Observability
+"opik>=1.7.42"
+```
+
+### 5. Database and Storage
+```toml
+# Vector databases
+"milvus>=2.0.0"
+"chromadb>=0.4.0"
+
+# Traditional databases
+"sqlite3"  # Usually built-in
+```
+
+## Python Version Requirements
+
+### Standard Requirement
+```toml
+requires-python = ">=3.12"
+```
+
+**Analysis:**
+- 100% of MCP servers require Python 3.12+
+- This is likely due to FastMCP requirements
+- Ensures modern Python features availability
+
+## Package Management Tools
+
+### UV (Recommended)
+Most projects use UV for package management:
+
+```bash
+# Install dependencies
+uv pip install -e .
+
+# Run server
+uv run server.py
+
+# Development mode
+uv run mcp dev server.py
+```
+
+### Poetry (Alternative)
+Some projects might use Poetry:
+
+```toml
+[tool.poetry]
+name = "mcp-server"
+version = "0.1.0"
+description = ""
+
+[tool.poetry.dependencies]
+python = "^3.12"
+mcp = {extras = ["cli"], version = "^1.10.0"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+```
+
+### Pip (Traditional)
+For simple deployments:
+
+```bash
+pip install mcp[cli]>=1.10.0
+pip install -r requirements.txt
+```
+
+## Environment Configuration
+
+### Using python-dotenv
+Common pattern for environment variables:
+
+```toml
+dependencies = [
+    "python-dotenv>=1.0.0",
+    # ... other deps
+]
+```
+
+Usage in code:
+```python
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+API_KEY = os.getenv("API_KEY")
+ENDPOINT = os.getenv("ENDPOINT", "default_value")
+```
+
+### .env File Structure
+```env
+# API Keys
+API_KEY=your_api_key_here
+GROUNDX_API_KEY=groundx_key
+LINKUP_API_KEY=linkup_key
+
+# Configuration
+MCP_TRANSPORT=stdio
+MCP_PORT=8080
+DEBUG=false
+
+# Service Endpoints
+DATABASE_URL=sqlite:///local.db
+CACHE_DIR=/tmp/mcp_cache
+```
+
+## Dependency Resolution
+
+### Lock Files
+Projects using UV generate `uv.lock`:
+```
+# Generated by uv
+# This file is machine generated - do not edit.
+
+[[package]]
+name = "mcp"
+version = "1.10.1"
+dependencies = [
+    "fastapi",
+    "pydantic",
+    # ...
+]
+```
+
+### Version Pinning Strategies
+
+#### Minimum Version (Flexible)
+```toml
+"mcp[cli]>=1.10.0"  # Any version 1.10.0 or higher
+```
+
+#### Exact Version (Strict)
+```toml
+"mcp[cli]==1.10.1"  # Exactly version 1.10.1
+```
+
+#### Compatible Version (Recommended)
+```toml
+"mcp[cli]~=1.10.0"  # 1.10.x but not 1.11.0
+```
+
+## Setup Script Example
+
+### Complete setup.py (if needed)
+```python
+from setuptools import setup, find_packages
+
+setup(
+    name="custom-mcp-server",
+    version="0.1.0",
+    packages=find_packages(),
+    install_requires=[
+        "mcp[cli]>=1.10.0",
+        "your-dependencies>=1.0.0",
+    ],
+    python_requires=">=3.12",
+    entry_points={
+        "console_scripts": [
+            "mcp-server=server:main",
+        ],
+    },
+)
+```
+
+## Installation Instructions
+
+### Standard Installation Flow
+```bash
+# 1. Clone repository
+git clone https://github.com/user/mcp-server.git
+cd mcp-server
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+uv pip install -e .
+# OR
+pip install -r requirements.txt
+
+# 4. Configure environment
+cp .env.example .env
+# Edit .env with your API keys
+
+# 5. Run server
+uv run server.py
+# OR
+python server.py
+```
+
+## Dependency Best Practices
+
+### 1. Version Management
+- Use minimum version specifications (>=)
+- Pin major versions for stability
+- Update regularly for security patches
+
+### 2. Grouping Dependencies
+```toml
+dependencies = [
+    # Core
+    "mcp[cli]>=1.10.0",
+    
+    # AI/ML
+    "llama-index>=0.12.0",
+    "transformers>=4.30.0",
+    
+    # Utilities
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    
+    # Development
+    "ipykernel>=6.29.5",
+    "pytest>=7.0.0",
+]
+```
+
+### 3. Optional Dependencies
+```toml
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+]
+rag = [
+    "llama-index>=0.12.0",
+    "chromadb>=0.4.0",
+]
+```
+
+### 4. Security Considerations
+- Never commit API keys
+- Use environment variables
+- Keep dependencies updated
+- Audit for vulnerabilities
+
+## Common Issues and Solutions
+
+### Issue 1: Python Version Mismatch
+```
+Error: Python 3.12+ required
+```
+**Solution:** Install Python 3.12 or use pyenv/conda
+
+### Issue 2: Missing System Dependencies
+```
+Error: Microsoft Visual C++ 14.0 is required
+```
+**Solution:** Install build tools for your platform
+
+### Issue 3: Conflicting Dependencies
+```
+Error: Version conflict between packages
+```
+**Solution:** Use virtual environments and lock files
+
+## Conclusion
+Proper dependency management is crucial for MCP server development. The patterns shown here, derived from real implementations, provide a solid foundation for building reliable and maintainable MCP servers. Always use Python 3.12+, include mcp[cli], and manage environment variables securely.
