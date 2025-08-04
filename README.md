@@ -16,6 +16,7 @@ This directory contains comprehensive documentation and analysis of MCP server i
 
 ### Guidelines
 7. **[Best Practices](07-best-practices.md)** - Recommendations for building robust MCP servers
+8. **[Deployment Methods](08-deployment-methods.md)** - How to deploy and distribute MCP servers
 
 ## 🎯 Purpose
 
